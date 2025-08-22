@@ -1,44 +1,90 @@
-::  parse hune
+::  parse hoon
 ::
 |=  t=tape
-|^  (scan t hune)
-+$  hun
+|^  (scan t p-hoon)
++$  hoon
   $@  @ud
-  $%  [%tisfas tape hun hun]
-      [%wutcol hun hun hun]
+  $%  [%tsfs p=skin q=hoon q=hoon]
+      [%wtcl p=hoon q=hoon r=hoon]
+      [%clhp p=hoon q=hoon]
   ==
 ::
-++  hune
-  %+  knee  *hun
+++  p-hoon
+  %+  knee  *hoon
   |.  ~+
   ;~  pose
     dem
     tisfas
     wutcol
+    colhep
   ==
 ::
-::  parse letters until a non-letter
-++  face
-  (star (shim 'a' 'z'))
++$  skin  term
+::
+++  p-skin
+  %+  boss
+    256
+  ;~  pose
+    (star (shim 'a' 'z'))
+  ==
 ::
 ::
 ++  tisfas
-  %+  knee  *hun
+  %+  knee  *hoon
   |.  ~+
-  ;~  (glue gap)
-    (cold %tisfas ;~(plug tis fas))
-    face
-    hune
-    hune
-  ==
+  (rune-three %tsfs tis fas p-skin p-hoon p-hoon)
 ::
 ++  wutcol
-  %+  knee  *hun
+  %+  knee  *hoon
   |.  ~+
-  ;~  (glue gap)
-    (cold %wutcol ;~(plug wut col))
-    hune
-    hune
-    hune
+  (rune-three %wtcl wut col p-hoon p-hoon p-hoon)
+::
+++  colhep
+  %+  knee  *hoon
+  |.  ~+
+  (rune-two %clhp col hep p-hoon p-hoon)
+::
+++  rune-three
+  |*  [symbol=term chara=rule charb=rule childa=rule childb=rule childc=rule]
+  ;~  pose
+    :: tall
+    ;~  (glue gap)
+      (cold symbol ;~(plug chara charb))
+      childa
+      childb
+      childc
+    ==
+    :: wide
+    ;~  plug
+      (cold symbol ;~(plug chara charb))
+      %+  ifix
+        [pal par]
+      ;~  (glue ace)
+        childa
+        childb
+        childc
+      ==
+    ==
+  ==
+::
+++  rune-two
+  |*  [symbol=term chara=rule charb=rule childa=rule childb=rule]
+  ;~  pose
+    :: tall
+    ;~  (glue gap)
+      (cold symbol ;~(plug chara charb))
+      childa
+      childb
+    ==
+    :: wide
+    ;~  plug
+      (cold symbol ;~(plug chara charb))
+      %+  ifix
+        [pal par]
+      ;~  (glue ace)
+        childa
+        childb
+      ==
+    ==
   ==
 --
