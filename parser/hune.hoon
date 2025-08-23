@@ -1,31 +1,44 @@
 ::  parse hoon
 ::
-::  Next steps:
-::  1. Implement every rune in both tall and wide forms (see comment blow)
-::  2. Go down the list of irregular syntax https://docs.urbit.org/hoon/irregular
-::  3. Testing and performance
-::  Open question: when do I run into LL vs. PEG, backtracking, etc
+::  Next Steps:
+::  - Parse limbs and wings
+::  - Implement all atom auras in p-sand
+::  - Implement every rune in both tall and wide forms
+::  - Implement all irregular syntax
+::  - Testing and performance
+::
+::  Known Unknowns:
+::  - LL vs. PEG. Does this naive parser grow the call stack too much? What does the current LL Hoon parser do to prevent this?
 ::
 |=  t=tape
-|^  (scan t p-hoon)
-+$  hoon
-  $@  @ud
-  $%  [%tsfs p=skin q=hoon q=hoon]
-      [%wtcl p=hoon q=hoon r=hoon]
-      [%clhp p=hoon q=hoon]
-  ==
 ::
+|^  (scan t p-hoon)
 ++  p-hoon
   %+  knee  *hoon
   |.  ~+
   ;~  pose
-    dem
+    p-sand
+::    p-limb
     tisfas
     wutcol
     colhep
   ==
 ::
-+$  skin  term
+++  p-sand
+  ;~  pose
+    :: @ud
+    %+  cook  
+      |=  a=@ud  [%sand p=%ud q=a]
+    dem
+  ==
+::
+:: ++  p-wing
+::   ;~  (gap dot)
+::
+:: ++  p-limb
+::   %+  cook
+::     |=  t=@t  [%limb p=t]
+::   (star (shim 'a' 'z'))
 ::
 ++  p-skin
   %+  boss
@@ -33,7 +46,6 @@
   ;~  pose
     (star (shim 'a' 'z'))
   ==
-::
 ::
 ++  tisfas
   %+  knee  *hoon
@@ -50,15 +62,54 @@
   |.  ~+
   (rune-two %clhp col hep p-hoon p-hoon)
 ::
-::  It might be both most readable and most succint to just hardcode all the possibilities:
-::  - a generic rune arm for each exact number of children a rune can take, where we pass in rules. so rune-three can be used for both wutcol and tisfas
-::  - (map term tome)
-::  - (list hoon)
-::  - (list (pair wing hoon))
-::  - etc
-::  might want to start with |_ and |^ to see how to reuse the (map term tome) arm despite different preceding children
-::  so the generic arms are a new thing to cut down on hoon.hoon having an arm for every single permutation, and
-::  the other ones are more similar to what hoon.hoon is doing but we can just use ++star for every one
+::  Obviously these rune-n rule builders are hideous from a code reuse perspective,
+::  but naively they seem way more legible than hoon.hoon's method of
+::  having a separate rule for each permutation of children a rune can have.
+::
+::  They can't take variable-sized children because of the way they apply their
+::  rules with ++plug, so I think I can write specific arms for each of those
+::  recursive data typed child that runes expect. I'm not sure if this is the correct
+::  approach, so I should start with |_ and |^ to see how to reuse the (map term tome) arm despite different preceding children
+::
+++  rune-one
+  |*  [symbol=term chara=rule charb=rule childa=rule]
+  ;~  pose
+    :: tall
+    ;~  (glue gap)
+      (cold symbol ;~(plug chara charb))
+      childa
+    ==
+    :: wide
+    ;~  plug
+      (cold symbol ;~(plug chara charb))
+      %+  ifix
+        [pal par]
+      ;~  (glue ace)
+        childa
+      ==
+    ==
+  ==
+::
+++  rune-two
+  |*  [symbol=term chara=rule charb=rule childa=rule childb=rule]
+  ;~  pose
+    :: tall
+    ;~  (glue gap)
+      (cold symbol ;~(plug chara charb))
+      childa
+      childb
+    ==
+    :: wide
+    ;~  plug
+      (cold symbol ;~(plug chara charb))
+      %+  ifix
+        [pal par]
+      ;~  (glue ace)
+        childa
+        childb
+      ==
+    ==
+  ==
 ::
 ++  rune-three
   |*  [symbol=term chara=rule charb=rule childa=rule childb=rule childc=rule]
@@ -83,14 +134,16 @@
     ==
   ==
 ::
-++  rune-two
-  |*  [symbol=term chara=rule charb=rule childa=rule childb=rule]
+++  rune-four
+  |*  [symbol=term chara=rule charb=rule childa=rule childb=rule childc=rule childd=rule]
   ;~  pose
     :: tall
     ;~  (glue gap)
       (cold symbol ;~(plug chara charb))
       childa
       childb
+      childc
+      childd
     ==
     :: wide
     ;~  plug
@@ -100,6 +153,8 @@
       ;~  (glue ace)
         childa
         childb
+        childc
+        childd
       ==
     ==
   ==
